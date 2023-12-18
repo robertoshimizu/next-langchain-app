@@ -2,7 +2,8 @@ import { StreamingTextResponse, LangChainStream, Message } from 'ai';
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { AIMessage, HumanMessage } from 'langchain/schema';
 import { OpenAIAssistantRunnable, ThreadMessage, RequiredActionFunctionToolCall, OpenAIAssistantFinish, OpenAIAssistantAction } from "langchain/experimental/openai_assistant";
-
+import { AgentExecutor } from "langchain/agents";
+import { StructuredTool } from "langchain/tools";
 
 
 export const runtime = 'edge';
@@ -16,22 +17,24 @@ interface Content {
   text: Text;
 }
 
-interface Message {
-  id: string;
-  object: string;
-  created_at: number;
-  thread_id: string;
-  role: string;
-  content: Content[];
-  file_ids: any[];
-  assistant_id: string;
-  run_id: string;
-  metadata: Record<string, unknown>;
-}
+// interface Message {
+//   id: string;
+//   object: string;
+//   created_at: number;
+//   thread_id: string;
+//   role: string;
+//   content: Content[];
+//   file_ids: any[];
+//   assistant_id: string;
+//   run_id: string;
+//   metadata: Record<string, unknown>;
+// }
 
-interface Thread {
-  messages: Message[];
-}
+// interface Thread {
+//   messages: Message[];
+// }
+
+
 
 type InputObject = {
   role: 'user' | 'assistant' | 'system' | 'function';
@@ -65,12 +68,22 @@ function isThreadMessageArray(obj: any): obj is ThreadMessage[] {
   );
 }
 
-function splitIntoChunks(text: string, chunkSize: number) {
-  const chunks = [];
-  for (let i = 0; i < text.length; i += chunkSize) {
-    chunks.push(text.substring(i, i + chunkSize));
-  }
-  return chunks;
+interface FunctionCall {
+  name: string;
+  arguments: string;  // Assuming arguments are passed as a JSON string
+}
+
+
+function isRequiredActionFunctionToolCallArray(obj: any): obj is RequiredActionFunctionToolCall[] {
+  return Array.isArray(obj) && obj.every(item =>
+    typeof item === 'object' &&
+    item !== null &&
+    'id' in item &&
+    'type' in item && item.type === 'function' &&
+    'function' in item && typeof item.function === 'object' &&
+    'name' in item.function && typeof item.function.name === 'string' &&
+    'arguments' in item.function && typeof item.function.arguments === 'string'
+  );
 }
 
 function createTextStreamFromWhole(text: string) {
@@ -92,30 +105,49 @@ function createTextStreamFromWhole(text: string) {
   });
 }
 
-function createTextStream(text: string, chunkSize = 10) {
-  const chunks = splitIntoChunks(text, chunkSize);
-  let currentIndex = 0;
-
-  return new ReadableStream({
-    start(controller) {
-      // This function is called when the stream is constructed.
-      // You can enqueue the first chunk here if you want.
-      controller.enqueue(chunks[currentIndex++]);
-    },
-    pull(controller) {
-      // This function is called when the reader wants more data.
-      if (currentIndex < chunks.length) {
-        controller.enqueue(chunks[currentIndex++]);
-      } else {
-        controller.close(); // Close the stream when no more data.
-      }
-    },
-    cancel() {
-      // This function is called if the reader cancels reading the stream.
-      console.log('Stream reading was cancelled.');
-    }
-  });
+function getCurrentWeather(location: string, _unit = "fahrenheit") {
+  if (location.toLowerCase().includes("tokyo")) {
+    return JSON.stringify({ location, temperature: "10", unit: "celsius" });
+  } else if (location.toLowerCase().includes("san francisco")) {
+    return JSON.stringify({ location, temperature: "72", unit: "fahrenheit" });
+  } else {
+    return JSON.stringify({ location, temperature: "22", unit: "celsius" });
+  }
 }
+
+interface WeatherInput {
+  location: string;
+  unit: 'celsius' | 'fahrenheit';
+}
+import { z } from 'zod';
+class WeatherTool extends StructuredTool {
+  // Define the schema using Zod
+  schema = z.object({
+    location: z.string().describe("The city and state, e.g. San Francisco, CA"),
+    unit: z.enum(["celsius", "fahrenheit"]).optional(),
+  });
+
+  // Explicitly typing class properties
+  name: string = "get_current_weather";
+  description: string = "Get the current weather in a given location";
+
+  // TypeScript constructor
+  constructor() {
+    super(); // If the parent class requires arguments, pass them accordingly
+  }
+
+  // Method with explicit parameter and return type
+  async _call(input: WeatherInput): Promise<any> { // Replace 'any' with the actual return type
+    const { location, unit } = input;
+    const result = getCurrentWeather(location, unit); // Assuming getCurrentWeather is defined elsewhere
+    return result;
+  }
+}
+
+
+
+const tools = [new WeatherTool()];
+
 
 
 
@@ -131,14 +163,21 @@ export async function POST(req: Request) {
 
   // const assistant = await OpenAIAssistantRunnable.createAssistant({
   // model: "gpt-4-1106-preview",
+  // name: "WeatherAssistant",
+  // instructions: "This is a weather assistant",
+  // tools: tools,
   // });
 
   const assistant = new OpenAIAssistantRunnable({
-  assistantId: "asst_AYy3fwtU1nkxma9sYJbtR9nc",
+  assistantId: "asst_MSDLTVhmmEuBtSrmrpDhfJrb",
   // asAgent: true
 });
   const assistantResponse = await assistant.invoke(payload);
-  let content:Content;
+  console.log("Assistant response:", assistantResponse);
+
+
+
+  
   // Handling different outcomes
 if (isThreadMessageArray(assistantResponse)) {
   // Handle ThreadMessage[]
@@ -152,36 +191,34 @@ if (isThreadMessageArray(assistantResponse)) {
     console.log("Thread_id:", message.thread_id);
     console.log("Role:", message.role);
     console.log("Content:", message.content);
-    content = message.content[0];
+    // @ts-ignore
+    const content:Content = message.content[0];
     console.log("File IDs:", message.file_ids);
     console.log("Assistant ID:", message.assistant_id);
     console.log("Run ID:", message.run_id);
     console.log("Metadata:", message.metadata);
     console.log("*********************************************");
     // Additional processing here
+
+    const textStream = createTextStreamFromWhole(content.text.value);
+    return new StreamingTextResponse(textStream);
   }
+  
+} else if (isRequiredActionFunctionToolCallArray(assistantResponse)) {
+  // Handle RequiredActionFunctionToolCall[]
+  console.log("Handling RequiredActionFunctionToolCall[]");
+  if (assistantResponse.length > 0) {
+    const call = assistantResponse[0];
+    console.log("Call ID:", call.id);
+    console.log("Function:", call.function.name);
+    console.log("Arguments:", call.function.arguments);
+    // Additional processing here
+    const textStream = createTextStreamFromWhole("Required Function to be called: " + call.function.name);
+    return new StreamingTextResponse(textStream);
+  };
+
   
 }
 
-// Example usage
-const textStream = createTextStreamFromWhole(content.text.value);
-
-
-  // const llm = new ChatOpenAI({
-  //   streaming: true,
-  // });
-
-  // llm
-  //   .call(
-  //     (messages as Message[]).map(m =>
-  //       m.role == 'user'
-  //         ? new HumanMessage(m.content)
-  //         : new AIMessage(m.content),
-  //     ),
-  //     {},
-  //     [handlers],
-  //   )
-  //   .catch(console.error);
-
-  return new StreamingTextResponse(textStream);
+  
 }
