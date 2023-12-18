@@ -166,59 +166,24 @@ export async function POST(req: Request) {
   // name: "WeatherAssistant",
   // instructions: "This is a weather assistant",
   // tools: tools,
+  // asAgent: true,
   // });
 
   const assistant = new OpenAIAssistantRunnable({
   assistantId: "asst_MSDLTVhmmEuBtSrmrpDhfJrb",
-  // asAgent: true
+  asAgent: true
 });
-  const assistantResponse = await assistant.invoke(payload);
-  console.log("Assistant response:", assistantResponse);
 
+const agentExecutor = AgentExecutor.fromAgentAndTools({
+  agent: assistant,
+  tools: tools,
+});
 
+  const assistantResponse = await agentExecutor.invoke(payload);
+  //const assistantResponse = await assistant.invoke(payload);
+  console.log("Assistant response:", assistantResponse.output);
 
-  
-  // Handling different outcomes
-if (isThreadMessageArray(assistantResponse)) {
-  // Handle ThreadMessage[]
-  console.log("Handling ThreadMessage[]");
-  console.log("---------------------------------------------");
-  if (assistantResponse.length > 0) {
-    const message = assistantResponse[0]; 
-  
-    console.log("Message ID:", message.id);
-    console.log("Object: ", message.object);
-    console.log("Thread_id:", message.thread_id);
-    console.log("Role:", message.role);
-    console.log("Content:", message.content);
-    // @ts-ignore
-    const content:Content = message.content[0];
-    console.log("File IDs:", message.file_ids);
-    console.log("Assistant ID:", message.assistant_id);
-    console.log("Run ID:", message.run_id);
-    console.log("Metadata:", message.metadata);
-    console.log("*********************************************");
-    // Additional processing here
-
-    const textStream = createTextStreamFromWhole(content.text.value);
-    return new StreamingTextResponse(textStream);
-  }
-  
-} else if (isRequiredActionFunctionToolCallArray(assistantResponse)) {
-  // Handle RequiredActionFunctionToolCall[]
-  console.log("Handling RequiredActionFunctionToolCall[]");
-  if (assistantResponse.length > 0) {
-    const call = assistantResponse[0];
-    console.log("Call ID:", call.id);
-    console.log("Function:", call.function.name);
-    console.log("Arguments:", call.function.arguments);
-    // Additional processing here
-    const textStream = createTextStreamFromWhole("Required Function to be called: " + call.function.name);
-    return new StreamingTextResponse(textStream);
-  };
-
-  
-}
-
+  const textStream = createTextStreamFromWhole(assistantResponse.output);
+  return new StreamingTextResponse(textStream);
   
 }
