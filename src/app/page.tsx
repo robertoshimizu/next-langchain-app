@@ -1,5 +1,4 @@
 'use client';
-import { UserButton } from "@clerk/nextjs";
 
 export default function LandingPage() {
 
@@ -8,10 +7,6 @@ export default function LandingPage() {
       <div className="whitespace-pre-wrap">
         Welcome to the landing page!
       </div>
-      <div className="h-screen">
-        <UserButton afterSignOutUrl="/"/>
-      </div>
-
     </div>
   );
 }

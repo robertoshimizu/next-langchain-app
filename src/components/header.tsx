@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { useAuth } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 
 const navigation = [
   { name: 'chat', href: 'chat' },
@@ -47,9 +47,11 @@ export default function Header() {
           </div>
         )}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="sign-in" className="text-sm font-semibold leading-6 text-gray-900">
-            Sign-in
-          </a>
+          { !sessionId ? (
+            <a href="sign-in" className="text-sm font-semibold leading-6 text-gray-900">
+              Sign-in
+            </a>
+          ) : <UserButton afterSignOutUrl="/"/>}
         </div>
       </nav>
       <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
@@ -89,12 +91,14 @@ export default function Header() {
                 </div>
               )}
               <div className="py-6">
-                <a
-                  href="sign-in"
-                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                >
-                  Sign-in
-                </a>
+                { !sessionId ? (
+                  <a
+                    href="sign-in"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                  >
+                    Sign-in
+                  </a>
+                ) : <UserButton afterSignOutUrl="/"/>}
               </div>
             </div>
           </div>
