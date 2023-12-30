@@ -15,8 +15,6 @@ const navigation = [
 export default function Header() {
   const { isLoaded, userId, sessionId, getToken } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  console.log('userId', userId)
-  console.log('sessionId', sessionId)
 
   return (
     <header className="bg-white">
