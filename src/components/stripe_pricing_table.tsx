@@ -13,7 +13,7 @@ export const StripePricingTable = () => {
   }, []);
 
   return React.createElement("stripe-pricing-table", { 
-    "pricing-table-id": "prctbl_1OTOAOBJKpKX2ihYNDpdj4dn",
-    "publishable-key": "pk_test_aY66jwLgCi5SMff42B8Vk0ML00qZU76EFi",
+    "pricing-table-id": process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE,
+    "publishable-key": process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
    });
 }
