@@ -1,10 +1,10 @@
 'use client';
-import { useState } from 'react'
-import { Dialog } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import {getStripe, options}  from '@/lib/getStripe';
+import {Elements, PaymentElement} from '@stripe/react-stripe-js';
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 import { ChatBubbleOvalLeftEllipsisIcon, HeartIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { CheckIcon } from '@heroicons/react/20/solid'
+import { StripePricingTable } from '@/components/stripe_pricing_table';
 
 const features = [
   {
@@ -40,7 +40,25 @@ const includedFeatures = [
   'Entry to annual conference',
   'Official member t-shirt',
 ]
+
+async function handleCheckout() {
+    const stripe = getStripe();
+    const { error } = await stripe.redirectToCheckout({
+      lineItems: [
+        {
+          price: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      successUrl: `http://localhost:3000/success`,
+      cancelUrl: `http://localhost:3000/cancel`,
+      customerEmail: 'customer@email.com',
+    });
+    console.warn(error.message);
+  }
 export default function LandingPage() {
+  const stripePromise = getStripe();
 
   return (
     <div className="bg-white">
@@ -249,6 +267,9 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+      </div>
+      <div>
+      <StripePricingTable />
       </div>
     </div>
   );

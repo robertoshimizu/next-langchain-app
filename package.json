@@ -12,6 +12,8 @@
     "@clerk/nextjs": "^4.28.1",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.1.1",
+    "@stripe/react-stripe-js": "^2.4.0",
+    "@stripe/stripe-js": "^2.2.2",
     "ai": "2.2.29",
     "langchain": "^0.0.196",
     "next": "14.0.3",
