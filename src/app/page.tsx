@@ -5,6 +5,7 @@ import { ChevronRightIcon } from '@heroicons/react/20/solid'
 import { ChatBubbleOvalLeftEllipsisIcon, HeartIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { CheckIcon } from '@heroicons/react/20/solid'
 import { StripePricingTable } from '@/components/stripe_pricing_table';
+import { SignIn } from '@clerk/nextjs';
 
 const features = [
   {
@@ -245,11 +246,13 @@ export default function LandingPage() {
               ))}
             </ul>
           </div>
-          <div className="-mt-2 p-2 lg:mt-0 lg:w-full lg:max-w-md lg:flex-shrink-0">
-            <div className="rounded-2xl py-10 text-center ring-1 ring-inset ring-gray-900/5 lg:flex lg:flex-col lg:justify-center lg:py-16">
-              <StripePricingTable />
+ 
+            <div className="-mt-2 p-2 lg:mt-0 lg:w-full lg:max-w-md lg:flex-shrink-0">
+              <div className="rounded-2xl py-10 text-center ring-1 ring-inset ring-gray-900/5 lg:flex lg:flex-col lg:justify-center lg:py-16">
+                <StripePricingTable />
+              </div>
             </div>
-          </div>
+  
         </div>
       </div>
       </div>
