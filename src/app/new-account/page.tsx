@@ -21,9 +21,11 @@ const NewAccountPage = () => {
     
   }
 
-
-
   const { user } = useUser();
+  const payload = {
+    "id": user?.id,
+    "email": user?.emailAddresses[0].emailAddress,
+  }
 
   return (
     <div className="mx-auto mt-16 max-w-5xl px-6 lg:px-8">
@@ -59,7 +61,7 @@ const NewAccountPage = () => {
  
             <div className="-mt-2 p-2 lg:mt-0 lg:w-full lg:max-w-md lg:flex-shrink-0">
               <div className="rounded-2xl py-10 text-center ring-1 ring-inset ring-gray-900/5 lg:flex lg:flex-col lg:justify-center lg:py-16">
-                <StripePricingTable />
+                <StripePricingTable user={payload} />
                 <button 
                   className='bg-red-700 text-white max-w-sm p-3 text-base border border-zinc-200 rounded-md w-48 mx-auto'
                   onClick={cancelarConta}
