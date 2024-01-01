@@ -1,9 +1,7 @@
 import Stripe from 'stripe';
-
-import { PrismaClient } from "@prisma/client";
+import { prisma } from './db';
 import { auth } from '@clerk/nextjs';
 
-const prisma = new PrismaClient();
 
 //price_1NarR3APMZcBliJSoefCKTi5
 

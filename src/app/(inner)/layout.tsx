@@ -1,6 +1,7 @@
 
 import { hasStripeSubscription } from "@/lib/stripe"
 import { auth } from '@clerk/nextjs'
+import { redirect } from "next/navigation";
 // import { withServerSideAuth } from '@clerk/nextjs/api'
 
 // export getServerSideProps = withServerSideAuth();
@@ -13,6 +14,11 @@ export default async function InnerLayout({
   const { } = auth();
   
   const stripeSubscribed = await hasStripeSubscription()
+  console.log("stripeSubscribed", stripeSubscribed)
+  if (!stripeSubscribed) {
+    // Redirect to /pricing
+    redirect("/new-account")
+  }
   return (
     <section>
       {/* Include shared UI here e.g. a header or sidebar */}
