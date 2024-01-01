@@ -1,11 +1,9 @@
 'use client';
-import {getStripe, options}  from '@/lib/getStripe';
-import {Elements, PaymentElement} from '@stripe/react-stripe-js';
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 import { ChatBubbleOvalLeftEllipsisIcon, HeartIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { CheckIcon } from '@heroicons/react/20/solid'
 import { StripePricingTable } from '@/components/stripe_pricing_table';
-import { SignIn } from '@clerk/nextjs';
+
 
 const features = [
   {
@@ -42,24 +40,7 @@ const includedFeatures = [
   'Official member t-shirt',
 ]
 
-async function handleCheckout() {
-    const stripe = getStripe();
-    const { error } = await stripe.redirectToCheckout({
-      lineItems: [
-        {
-          price: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      successUrl: `http://localhost:3000/success`,
-      cancelUrl: `http://localhost:3000/cancel`,
-      customerEmail: 'customer@email.com',
-    });
-    console.warn(error.message);
-  }
 export default function LandingPage() {
-  const stripePromise = getStripe();
 
   return (
     <div className="bg-white">
