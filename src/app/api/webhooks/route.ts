@@ -21,7 +21,70 @@ export async function POST(req: Request) {
     
     const event = stripe.webhooks.constructEvent(body, signature, secret);
     
-    console.log("event", event);
+    // Handle the event
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        const paymentIntentSucceeded = event.data.object;
+        // Then define and call a function to handle the event payment_intent.succeeded
+        break;
+      // ... handle other event types
+      case 'invoice.payment_succeeded':
+        const invoice = event.data.object;
+        // Then define and call a function to handle the event invoice.payment_succeeded
+        break;
+      case 'invoice.paid':
+        const invoicePaid = event.data.object;
+        // Then define and call a function to handle the event invoice.paid
+        break;
+      case 'invoice.finalized':
+        const invoiceFinalized = event.data.object;
+        // Then define and call a function to handle the event invoice.finalized
+        break;
+      case 'invoice.created':
+        const invoiceCreated = event.data.object;
+        // Then define and call a function to handle the event invoice.created
+        break;
+      case 'customer.updated':
+        const customerUpdated = event.data.object;
+        // Then define and call a function to handle the event customer.updated
+        break;
+      case 'payment_method.attached':
+        const paymentMethodAttached = event.data.object;
+        // Then define and call a function to handle the event payment_method.attached
+        break;
+      case 'customer.created':
+        const customerCreated = event.data.object;
+        // Then define and call a function to handle the event customer.created
+        break;
+      case 'checkout.session.completed':
+        const checkoutSessionCompleted = event.data.object;
+        // Then define and call a function to handle the event checkout.session.completed
+        const payload = {
+          'client_reference_id': checkoutSessionCompleted.client_reference_id,
+          'stripe_customer_id': checkoutSessionCompleted.customer,
+          'stripe_subscription_id': checkoutSessionCompleted.subscription,
+          'email': checkoutSessionCompleted.customer_details?.email,
+          'phone': checkoutSessionCompleted.customer_details?.phone,
+          'name': checkoutSessionCompleted.customer_details?.name,
+          'created': checkoutSessionCompleted.created,
+        }
+        console.log(payload);
+        break;
+      case 'setup_intent.succeeded':
+        const setupIntentSucceeded = event.data.object;
+        // Then define and call a function to handle the event setup_intent.succeeded
+        break;  
+      case 'customer.subscription.created':
+        const customerSubscriptionCreated = event.data.object;
+        // Then define and call a function to handle the event customer.subscription.created
+        break;
+      case 'setup_intent.created':
+        const setupIntentCreated = event.data.object;
+        // Then define and call a function to handle the event setup_intent.created
+        break;
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
     
     return NextResponse.json({ result: event, ok: true });
   } catch (error) {
