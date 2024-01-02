@@ -1,4 +1,5 @@
 // webhook to handle stripe events
+import { prisma } from '@/lib/db';
 import Cors from 'micro-cors';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
@@ -58,17 +59,34 @@ export async function POST(req: Request) {
         break;
       case 'checkout.session.completed':
         const checkoutSessionCompleted = event.data.object;
+        console.log('************** New Customer subscription **************');
+        console.log(checkoutSessionCompleted.customer);
+        console.log(checkoutSessionCompleted.status);
+        console.log('*******************************************************')
         // Then define and call a function to handle the event checkout.session.completed
-        const payload = {
-          'client_reference_id': checkoutSessionCompleted.client_reference_id,
-          'stripe_customer_id': checkoutSessionCompleted.customer,
-          'stripe_subscription_id': checkoutSessionCompleted.subscription,
-          'email': checkoutSessionCompleted.customer_details?.email,
-          'phone': checkoutSessionCompleted.customer_details?.phone,
-          'name': checkoutSessionCompleted.customer_details?.name,
-          'created': checkoutSessionCompleted.created,
-        }
-        console.log(payload);
+        // const payload = {
+        //   'client_reference_id': checkoutSessionCompleted.client_reference_id,
+        //   'stripe_customer_id': checkoutSessionCompleted.customer,
+        //   'stripe_subscription_id': checkoutSessionCompleted.subscription,
+        //   'email': checkoutSessionCompleted.customer_details?.email,
+        //   'phone': checkoutSessionCompleted.customer_details?.phone,
+        //   'name': checkoutSessionCompleted.customer_details?.name,
+        //   'created': checkoutSessionCompleted.created,
+        // }
+        const user = await prisma.user.create({
+                    data: {
+                      // @ts-ignore
+                      email: checkoutSessionCompleted.customer_details?.email,
+                      phone: checkoutSessionCompleted.customer_details?.phone,
+                      name: checkoutSessionCompleted.customer_details?.name,
+                      clerk_id: checkoutSessionCompleted.client_reference_id,
+                      // @ts-ignore
+                      stripe_customer_id: checkoutSessionCompleted.customer,
+                      // @ts-ignore
+                      stripe_subscription_id: checkoutSessionCompleted.subscription,
+                    },
+                  })
+                  
         break;
       case 'setup_intent.succeeded':
         const setupIntentSucceeded = event.data.object;

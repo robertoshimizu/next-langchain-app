@@ -17,11 +17,10 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  phone     String?
   name      String?
-  password  String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   clerk_id  String?
-  google_id String?
-  stripe_id String?
+  stripe_customer_id String?
+  stripe_subscription_id String?
 }
