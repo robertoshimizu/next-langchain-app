@@ -1,6 +1,8 @@
-
+'use client';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { CheckIcon } from '@heroicons/react/20/solid'
 import { StripePricingTable } from '@/components/stripe_pricing_table';
+import { useRouter } from 'next/navigation'
 
 const includedFeatures = [
   'Private forum access',
@@ -9,14 +11,28 @@ const includedFeatures = [
   'Official member t-shirt',
 ]
 
-const NewAccountPage = async () => {
+const NewAccountPage = () => {
+  const { signOut } = useClerk();
+  const router = useRouter()
+
+  function cancelarConta() {
+    console.log("cancelarConta");
+    signOut(() => router.push("/"))
+    
+  }
+
+  const { user } = useUser();
+  const payload = {
+    "id": user?.id,
+    "email": user?.emailAddresses[0].emailAddress,
+  }
 
   return (
-    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="mx-auto mt-16 max-w-5xl px-6 lg:px-8">
       <div className="py-12">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900">New Account</h1>
-          <p className="mt-4 text-lg text-gray-500">Create a new account.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Olá {user?.firstName}</h1>
+          <p className="mt-4 text-lg text-gray-500">Para continuar você deve assinar um plano.</p>
         </div>
       </div>
       <div className="mx-auto mt-16 max-w-2xl rounded-3xl ring-1 ring-gray-200 sm:mt-20 lg:mx-0 lg:flex lg:max-w-none">
@@ -45,8 +61,14 @@ const NewAccountPage = async () => {
  
             <div className="-mt-2 p-2 lg:mt-0 lg:w-full lg:max-w-md lg:flex-shrink-0">
               <div className="rounded-2xl py-10 text-center ring-1 ring-inset ring-gray-900/5 lg:flex lg:flex-col lg:justify-center lg:py-16">
-                <StripePricingTable />
-              </div>
+                <StripePricingTable user={payload} />
+                <button 
+                  className='bg-red-700 text-white max-w-sm p-3 text-base border border-zinc-200 rounded-md w-48 mx-auto'
+                  onClick={cancelarConta}
+                  >
+                  Não tenho interesse 
+                </button>
+              </div> 
             </div>
   
         </div>

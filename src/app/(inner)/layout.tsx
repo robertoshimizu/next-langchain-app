@@ -1,6 +1,6 @@
 
 import { hasStripeSubscription } from "@/lib/stripe"
-import { auth } from '@clerk/nextjs'
+import { currentUser } from '@clerk/nextjs'
 import { redirect } from "next/navigation";
 // import { withServerSideAuth } from '@clerk/nextjs/api'
 
@@ -11,7 +11,8 @@ export default async function InnerLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { } = auth();
+  const user = await currentUser()
+  //console.log("user", user)
   
   const stripeSubscribed = await hasStripeSubscription()
   console.log("stripeSubscribed", stripeSubscribed)

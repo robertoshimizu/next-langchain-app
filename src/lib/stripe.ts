@@ -15,39 +15,38 @@ export async function hasStripeSubscription() {
     if (userId) {
         try {
             const user = await prisma.user.findFirst({ where: { clerk_id: userId } });
-            if (user?.stripe_id) {
-                const subscriptions = await stripe.subscriptions.list({
-                customer: String(user?.stripe_id)
-                })
-
-                return subscriptions.data.length > 0;
-            }
-            return false;
+            if (user?.stripe_subscription_id){
+                return true;
+            } else return false;
         } catch (error) {
             console.log(error);
         }
-        
-
-    }
-
-    return false;
+    } else return false;
 }
 
-export async function createCheckoutLink(customer: string) {
-    const checkout = await stripe.checkout.sessions.create({
-        success_url: "http://localhost:3000/dashboard/billing?success=true",
-        cancel_url: "http://localhost:3000/dashboard/billing?success=true",
-        customer: customer,
-        line_items: [
-            {
-                price: 'price_1NarR3APMZcBliJSoefCKTi5'
-            }
-        ],
-        mode: "subscription"
-    })
+    // if (user?.stripe_id) {
+    //     const subscriptions = await stripe.subscriptions.list({
+    //     customer: String(user?.stripe_id)
+    //     })
 
-    return checkout.url;
-}
+    //     return subscriptions.data.length > 0;
+    // }
+
+// export async function createCheckoutLink(customer: string) {
+//     const checkout = await stripe.checkout.sessions.create({
+//         success_url: "http://localhost:3000/dashboard/billing?success=true",
+//         cancel_url: "http://localhost:3000/dashboard/billing?success=true",
+//         customer: customer,
+//         line_items: [
+//             {
+//                 price: 'price_1NarR3APMZcBliJSoefCKTi5'
+//             }
+//         ],
+//         mode: "subscription"
+//     })
+
+//     return checkout.url;
+// }
 
 // export async function createStripeCustomerIfNull() {
 
