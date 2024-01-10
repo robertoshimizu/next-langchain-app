@@ -6,6 +6,7 @@ import { UserButton, useAuth } from "@clerk/nextjs";
 
 const navigation = [
   { name: 'chat', href: 'chat' },
+  { name: 'chat-with-functions', href: 'chat-with-functions' },
   { name: 'assistant', href: 'assistant' },
   { name: 'assistant-as-agent', href: 'assistant-as-agent' },
   { name: 'stream-data-basic', href: 'stream-data-basic' },
