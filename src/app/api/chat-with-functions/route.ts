@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Message as VercelChatMessage, StreamingTextResponse, AIStream, type AIStreamCallbacksAndOptions  } from "ai";
+import { Message as VercelChatMessage, StreamingTextResponse, AIStream, type AIStreamCallbacksAndOptions, LangChainStream  } from "ai";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { HttpResponseOutputParser } from "langchain/output_parsers";
@@ -68,6 +68,21 @@ export async function POST(req: NextRequest) {
      * const chain = RunnableSequence.from([prompt, model, outputParser]);
      */
     //const chain = prompt.pipe(model).pipe(outputParser);
+
+    // handlers: {
+    //     handleLLMNewToken: (token: string) => Promise<void>;
+    //     handleLLMStart: (_llm: any, _prompts: string[], runId: string) => Promise<void>;
+    //     handleLLMEnd: (_output: any, runId: string) => Promise<void>;
+    //     handleLLMError: (e: Error, runId: string) => Promise<void>;
+    //     handleChainStart: (_chain: any, _inputs: any, runId: string) => Promise<void>;
+    //     handleChainEnd: (_outputs: any, runId: string) => Promise<void>;
+    //     handleChainError: (e: Error, runId: string) => Promise<void>;
+    //     handleToolStart: (_tool: any, _input: string, runId: string) => Promise<void>;
+    //     handleToolEnd: (_output: string, runId: string) => Promise<void>;
+    //     handleToolError: (e: Error, runId: string) => Promise<void>;
+    // };
+
+    const { stream, handlers } = LangChainStream();
     const chain = new LLMChain({ prompt, llm});
 
     const output = await chain.call(
@@ -77,12 +92,23 @@ export async function POST(req: NextRequest) {
           {
             callbacks: [
               {
+                handleLLMStart(llm, _prompts: string[]) {
+                  console.log("handleLLMStart: ", { llm });
+                },
+                handleChainStart(chain) {
+                  console.log("handleChainStart: ", { chain });
+                },
                 handleLLMNewToken(token: string) {
                   console.log({ token });
+                },
+                handleLLMEnd() {
+                  console.log("Finished chain.");
                 },
               },
             ],
           })
+
+    
     /*
     Entering new llm_chain chain...
     Finished chain.
@@ -99,8 +125,8 @@ export async function POST(req: NextRequest) {
     //   input: currentMessageContent,
     // });
 
-    //return new StreamingTextResponse(response);
-    NextResponse.json({ text: 'hello' }, { status: 500 });
+    return new StreamingTextResponse(stream);
+    
     
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

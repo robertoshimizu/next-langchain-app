@@ -4,6 +4,7 @@ import { Message as VercelChatMessage, StreamingTextResponse } from "ai";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { HttpResponseOutputParser } from "langchain/output_parsers";
+import { Run } from "@langchain/core/tracers/base";
 
 export const runtime = "edge";
 
@@ -65,7 +66,45 @@ export async function POST(req: NextRequest) {
      */
     const chain = prompt.pipe(model).pipe(outputParser);
 
-    const stream = await chain.stream({
+    const trackTime = () => {
+        let start: { startTime: number; question: string };
+        let end: { endTime: number; answer: string };
+
+        const handleStart = (run: Run) => {
+          start = {
+            startTime: run.start_time,
+            question: run.inputs.question,
+          };
+        };
+
+        const handleEnd = (run: Run) => {
+          if (run.end_time && run.outputs) {
+            end = {
+              endTime: run.end_time,
+              answer: run.outputs.content,
+            };
+          }
+
+          console.log("start", start);
+          console.log("end", end);
+          console.log(`total time: ${end.endTime - start.startTime}ms`);
+        };
+
+        return { handleStart, handleEnd };
+      };
+
+    const { handleStart, handleEnd } = trackTime();
+
+    const stream = await chain
+    .withListeners({
+        onStart: (run: Run) => {
+          handleStart(run);
+        },
+        onEnd: (run: Run) => {
+          handleEnd(run);
+        },
+      })
+    .stream({
       chat_history: formattedPreviousMessages.join("\n"),
       input: currentMessageContent,
     });
