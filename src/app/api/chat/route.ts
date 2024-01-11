@@ -71,13 +71,15 @@ export async function POST(req: NextRequest) {
         let end: { endTime: number; answer: string };
 
         const handleStart = (run: Run) => {
+          
           start = {
             startTime: run.start_time,
-            question: run.inputs.question,
+            question: run.inputs.input,
           };
         };
 
         const handleEnd = (run: Run) => {
+          console.log('output', run.child_runs[run.child_runs.length - 1].inputs.content)
           if (run.end_time && run.outputs) {
             end = {
               endTime: run.end_time,
@@ -85,9 +87,9 @@ export async function POST(req: NextRequest) {
             };
           }
 
-          console.log("start", start);
-          console.log("end", end);
-          console.log(`total time: ${end.endTime - start.startTime}ms`);
+          // console.log("start", start);
+          // console.log("end", end);
+          // console.log(`total time: ${end.endTime - start.startTime}ms`);
         };
 
         return { handleStart, handleEnd };
