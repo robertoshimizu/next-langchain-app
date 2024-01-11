@@ -30,11 +30,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const messages = body.messages ?? [];
-    console.log("Messages", messages);
+    //console.log("Messages", messages);
     const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
-    console.log("Previous messages", formattedPreviousMessages);
+    //console.log("Previous messages", formattedPreviousMessages);
     const currentMessageContent = messages[messages.length - 1].content;
-    console.log("Current message", currentMessageContent);
+    //console.log("Current message", currentMessageContent);
     const prompt = PromptTemplate.fromTemplate(TEMPLATE);
     //const prompt = currentMessageContent
 

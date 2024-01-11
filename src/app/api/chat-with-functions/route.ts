@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
      * https://js.langchain.com/docs/modules/model_io/models/
      */
 
-    const handler = new ConsoleCallbackHandler();
+    //const handler = new ConsoleCallbackHandler();
     const llm = new ChatOpenAI({
       temperature: 0.0,
       modelName: "gpt-3.5-turbo-1106",
@@ -82,7 +82,19 @@ export async function POST(req: NextRequest) {
     //     handleToolError: (e: Error, runId: string) => Promise<void>;
     // };
 
-    const { stream, handlers } = LangChainStream();
+    const { stream, writer, handlers } = LangChainStream(
+      {
+        async onStart() {
+          console.log('Started')
+        },
+        async onToken (token) {
+          console.log(token)
+        },
+        async onCompletion(completion) {
+          console.log(completion)
+        }
+      }
+    );
     const chain = new LLMChain({ prompt, llm});
 
     const output = await chain.call(
@@ -93,32 +105,23 @@ export async function POST(req: NextRequest) {
             callbacks: [
               {
                 handleLLMStart(llm, _prompts: string[]) {
-                  console.log("handleLLMStart: ", { llm });
+                  //console.log("handleLLMStart: ", { llm });
                 },
                 handleChainStart(chain) {
-                  console.log("handleChainStart: ", { chain });
+                  //console.log("handleChainStart: ", { chain });
                 },
                 handleLLMNewToken(token: string) {
                   console.log({ token });
                 },
                 handleLLMEnd() {
-                  console.log("Finished chain.");
+                  //console.log("Finished chain.");
                 },
               },
             ],
-          })
-
-    
-    /*
-    Entering new llm_chain chain...
-    Finished chain.
-    */
+          },
+          ).catch(console.error)
 
     console.log('Output: ', output);
-
-
-    // The non-enumerable key `__run` contains the runId.
-    console.log('Output RunId: ', output.__run);
 
     // const response = await chain.stream({
     //   chat_history: formattedPreviousMessages.join("\n"),
