@@ -5,12 +5,13 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { UserButton, useAuth } from "@clerk/nextjs";
 
 const navigation = [
-  { name: 'chat', href: 'chat' },
-  { name: 'chat-with-functions', href: 'chat-with-functions' },
+  { name: 'chat-legacy', href: 'chat-legacy' },
+  { name: 'chat-lcel', href: 'chat-lcel' },
+  { name: 'agent-with-functions', href: 'agent-with-functions' },
+  { name: 'stream-data-chain', href: 'stream-data-chain' },
   { name: 'assistant', href: 'assistant' },
   { name: 'assistant-as-agent', href: 'assistant-as-agent' },
-  { name: 'stream-data-basic', href: 'stream-data-basic' },
-  { name: 'stream-data-chain', href: 'stream-data-chain' },
+  
 ]
 
 export default function Header() {
