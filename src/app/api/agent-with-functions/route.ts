@@ -1,10 +1,16 @@
+import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import { ChatOpenAI } from "@langchain/openai";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
+
+
 import { NextRequest, NextResponse } from "next/server";
 import { Message as VercelChatMessage, StreamingTextResponse } from "ai";
-
-import { ChatOpenAI } from "@langchain/openai";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { HttpResponseOutputParser } from "langchain/output_parsers";
 import { Run } from "@langchain/core/tracers/base";
+import { IterableReadableStream } from "@langchain/core/dist/utils/stream";
 
 export const runtime = "edge";
 
@@ -12,20 +18,25 @@ const formatMessage = (message: VercelChatMessage) => {
   return `${message.role}: ${message.content}`;
 };
 
-const TEMPLATE = `
+function iterableReadableStreamToReadableStream(iterableReadableStream:IterableReadableStream<any>) {
+    return new ReadableStream<any>({
+        async pull(controller) {
+            for await (const chunk of iterableReadableStream) {
+                controller.enqueue(chunk);
+                // Check if the consumer is still ready for more chunks
+                // @ts-ignore
+                if (controller.desiredSize <= 0) {
+                    break;
+                }
+            }
+            controller.close();
+        }
+    });
+}
 
-Current conversation:
-{chat_history}
 
-User: {input}
-AI:`;
 
-/**
- * This handler initializes and calls a simple chain with a prompt,
- * chat model, and output parser. See the docs for more information:
- *
- * https://js.langchain.com/docs/guides/expression_language/cookbook#prompttemplate--llm--outputparser
- */
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -35,83 +46,64 @@ export async function POST(req: NextRequest) {
     //console.log("Previous messages", formattedPreviousMessages);
     const currentMessageContent = messages[messages.length - 1].content;
     //console.log("Current message", currentMessageContent);
-    const prompt = PromptTemplate.fromTemplate(TEMPLATE);
-    //const prompt = currentMessageContent
+    
+    // Get the prompt to use - you can modify this!
+    // If you want to see the prompt in full, you can at:
+    // https://smith.langchain.com/hub/hwchase17/openai-functions-agent
+    const prompt = await pull<ChatPromptTemplate>(
+      "hwchase17/openai-functions-agent"
+    );
 
-    /**
-     * You can also try e.g.:
-     *
-     * import { ChatAnthropic } from "langchain/chat_models/anthropic";
-     * const model = new ChatAnthropic({});
-     *
-     * See a full list of supported models at:
-     * https://js.langchain.com/docs/modules/model_io/models/
-     */
-    const model = new ChatOpenAI({
-      temperature: 0.0,
+    // Define the tools the agent will have access to.
+    const tools = [new TavilySearchResults({ maxResults: 1 })];
+
+    const llm = new ChatOpenAI({
       modelName: "gpt-3.5-turbo-1106",
+      temperature: 0,
     });
 
-    /**
-     * Chat models stream message chunks rather than bytes, so this
-     * output parser handles serialization and byte-encoding.
-     */
-    const outputParser = new HttpResponseOutputParser();
-
-    /**
-     * Can also initialize as:
-     *
-     * import { RunnableSequence } from "langchain/schema/runnable";
-     * const chain = RunnableSequence.from([prompt, model, outputParser]);
-     */
-    const chain = prompt.pipe(model).pipe(outputParser);
-
-    const trackTime = () => {
-        let start: { startTime: number; question: string };
-        let end: { endTime: number; answer: string };
-
-        const handleStart = (run: Run) => {
-          
-          start = {
-            startTime: run.start_time,
-            question: run.inputs.input,
-          };
-        };
-
-        const handleEnd = (run: Run) => {
-          console.log('output', run.child_runs[run.child_runs.length - 1].inputs.content)
-          if (run.end_time && run.outputs) {
-            end = {
-              endTime: run.end_time,
-              answer: run.outputs.content,
-            };
-          }
-
-          // console.log("start", start);
-          // console.log("end", end);
-          // console.log(`total time: ${end.endTime - start.startTime}ms`);
-        };
-
-        return { handleStart, handleEnd };
-      };
-
-    const { handleStart, handleEnd } = trackTime();
-
-    const stream = await chain
-    .withListeners({
-        onStart: (run: Run) => {
-          handleStart(run);
-        },
-        onEnd: (run: Run) => {
-          handleEnd(run);
-        },
-      })
-    .stream({
-      chat_history: formattedPreviousMessages.join("\n"),
-      input: currentMessageContent,
+    const agent = await createOpenAIFunctionsAgent({
+      llm,
+      tools,
+      prompt,
     });
 
-    return new StreamingTextResponse(stream);
+    const agentExecutor = new AgentExecutor({
+      agent,
+      tools,
+    });
+
+    // const iterableStream = await agentExecutor.stream({
+    //   input: "what is LangChain?",
+    // });
+
+    // for await (const chunk of iterableStream) {
+    //   console.log(JSON.stringify(chunk, null, 2));
+    //   console.log("------");
+    // }
+
+    const logStream = await agentExecutor.streamLog({
+      input: "what is the weather in SF",
+    });
+
+    for await (const chunk of logStream) {
+      console.log(JSON.stringify(chunk, null, 2));
+    }
+
+    // for await (const chunk of logStream) {
+    //   if (chunk.ops?.length > 0 && chunk.ops[0].op === "add") {
+    //     const addOp = chunk.ops[0];
+    //     if (
+    //       addOp.path.startsWith("/logs/ChatOpenAI") &&
+    //       typeof addOp.value === "string" &&
+    //       addOp.value.length
+    //     ) {
+    //       console.log(addOp.value);
+    //     }
+    //   }
+    // }
+    //return new StreamingTextResponse(stream);
+    return NextResponse.json({ value: 'sucess' }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

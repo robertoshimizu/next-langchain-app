@@ -1,7 +1,7 @@
 
-import { hasStripeSubscription } from "@/lib/stripe"
-import { currentUser } from '@clerk/nextjs'
-import { redirect } from "next/navigation";
+// import { hasStripeSubscription } from "@/lib/stripe"
+// import { currentUser } from '@clerk/nextjs'
+// import { redirect } from "next/navigation";
 // import { withServerSideAuth } from '@clerk/nextjs/api'
 
 // export getServerSideProps = withServerSideAuth();
@@ -11,19 +11,19 @@ export default async function InnerLayout({
 }: {
   children: React.ReactNode
 }) {
-  const user = await currentUser()
+  // const user = await currentUser()
   //console.log("user", user)
   
-  const stripeSubscribed = await hasStripeSubscription()
-  console.log("stripeSubscribed", stripeSubscribed)
-  if (!stripeSubscribed) {
-    // Redirect to /pricing
-    redirect("/new-account")
-  }
+  // const stripeSubscribed = await hasStripeSubscription()
+  // console.log("stripeSubscribed", stripeSubscribed)
+  // if (!stripeSubscribed) {
+  //   // Redirect to /pricing
+  //   redirect("/new-account")
+  // }
   return (
     <section>
       {/* Include shared UI here e.g. a header or sidebar */}
-      <nav>Stripe subscribed: {stripeSubscribed}</nav>
+      {/* <nav>Stripe subscribed: {stripeSubscribed}</nav> */}
  
       {children}
     </section>

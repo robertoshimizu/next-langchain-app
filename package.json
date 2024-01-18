@@ -12,6 +12,7 @@
     "@clerk/nextjs": "^4.29.2",
     "@headlessui/react": "^1.7.18",
     "@heroicons/react": "^2.1.1",
+    "@langchain/community": "^0.0.16",
     "@langchain/core": "^0.1.12",
     "@langchain/openai": "^0.0.10",
     "@prisma/client": "^5.8.0",
