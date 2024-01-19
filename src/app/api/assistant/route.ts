@@ -1,7 +1,6 @@
-import { StreamingTextResponse, LangChainStream, Message } from 'ai';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-import { AIMessage, HumanMessage } from 'langchain/schema';
-import { OpenAIAssistantRunnable, ThreadMessage, RequiredActionFunctionToolCall, OpenAIAssistantFinish, OpenAIAssistantAction } from "langchain/experimental/openai_assistant";
+import { StreamingTextResponse, LangChainStream} from 'ai';
+import { OpenAIAssistantRunnable } from 'langchain/experimental/openai_assistant';
+import { ThreadMessage } from 'openai/resources/beta/threads/messages/messages';
 
 
 
@@ -138,30 +137,30 @@ export async function POST(req: Request) {
   // asAgent: true
 });
   const assistantResponse = await assistant.invoke(payload);
-  let content:Content;
+  let content:any;
   // Handling different outcomes
-if (isThreadMessageArray(assistantResponse)) {
-  // Handle ThreadMessage[]
-  console.log("Handling ThreadMessage[]");
-  console.log("---------------------------------------------");
-  if (assistantResponse.length > 0) {
-    const message = assistantResponse[0]; 
-  
-    console.log("Message ID:", message.id);
-    console.log("Object: ", message.object);
-    console.log("Thread_id:", message.thread_id);
-    console.log("Role:", message.role);
-    console.log("Content:", message.content);
-    content = message.content[0];
-    console.log("File IDs:", message.file_ids);
-    console.log("Assistant ID:", message.assistant_id);
-    console.log("Run ID:", message.run_id);
-    console.log("Metadata:", message.metadata);
-    console.log("*********************************************");
-    // Additional processing here
+  if (isThreadMessageArray(assistantResponse)) {
+    // Handle ThreadMessage[]
+    console.log("Handling ThreadMessage[]");
+    console.log("---------------------------------------------");
+    if (assistantResponse.length > 0) {
+      const message = assistantResponse[0]; 
+    
+      console.log("Message ID:", message.id);
+      console.log("Object: ", message.object);
+      console.log("Thread_id:", message.thread_id);
+      console.log("Role:", message.role);
+      console.log("Content:", message.content);
+      content = message.content[0]
+      console.log("File IDs:", message.file_ids);
+      console.log("Assistant ID:", message.assistant_id);
+      console.log("Run ID:", message.run_id);
+      console.log("Metadata:", message.metadata);
+      console.log("*********************************************");
+      // Additional processing here
+    }
+    
   }
-  
-}
 
 // Example usage
 const textStream = createTextStreamFromWhole(content.text.value);

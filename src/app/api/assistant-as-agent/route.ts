@@ -1,7 +1,6 @@
-import { StreamingTextResponse, LangChainStream, Message } from 'ai';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-import { AIMessage, HumanMessage } from 'langchain/schema';
-import { OpenAIAssistantRunnable, ThreadMessage, RequiredActionFunctionToolCall, OpenAIAssistantFinish, OpenAIAssistantAction } from "langchain/experimental/openai_assistant";
+import { StreamingTextResponse, LangChainStream} from 'ai';
+
+import { OpenAIAssistantRunnable,  } from "langchain/experimental/openai_assistant";
 import { AgentExecutor } from "langchain/agents";
 import { StructuredTool } from "langchain/tools";
 
@@ -17,22 +16,22 @@ interface Content {
   text: Text;
 }
 
-// interface Message {
-//   id: string;
-//   object: string;
-//   created_at: number;
-//   thread_id: string;
-//   role: string;
-//   content: Content[];
-//   file_ids: any[];
-//   assistant_id: string;
-//   run_id: string;
-//   metadata: Record<string, unknown>;
-// }
+interface Message {
+  id: string;
+  object: string;
+  created_at: number;
+  thread_id: string;
+  role: string;
+  content: Content[];
+  file_ids: any[];
+  assistant_id: string;
+  run_id: string;
+  metadata: Record<string, unknown>;
+}
 
-// interface Thread {
-//   messages: Message[];
-// }
+interface Thread {
+  messages: Message[];
+}
 
 
 
@@ -120,6 +119,8 @@ interface WeatherInput {
   unit: 'celsius' | 'fahrenheit';
 }
 import { z } from 'zod';
+import { ThreadMessage } from 'openai/resources/beta/threads/messages/messages';
+import { RequiredActionFunctionToolCall } from 'openai/resources/beta/threads/runs/runs';
 class WeatherTool extends StructuredTool {
   // Define the schema using Zod
   schema = z.object({
