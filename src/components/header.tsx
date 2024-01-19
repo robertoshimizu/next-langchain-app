@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { UserButton, useAuth } from "@clerk/nextjs";
 
 const navigation = [
   { name: 'chat-legacy', href: 'chat-legacy' },
@@ -15,7 +14,7 @@ const navigation = [
 ]
 
 export default function Header() {
-  const { isLoaded, userId, sessionId, getToken } = useAuth();
+  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -37,7 +36,7 @@ export default function Header() {
             <Bars3Icon className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
-        { sessionId && (
+       
           <div className="hidden lg:flex lg:gap-x-12">
             {navigation.map((item) => (
               <a key={item.name} href={item.href} className="text-sm font-semibold leading-6 text-gray-900">
@@ -45,14 +44,8 @@ export default function Header() {
               </a>
             ))}
           </div>
-        )}
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          { !sessionId ? (
-            <a href="sign-in" className="text-sm font-semibold leading-6 text-gray-900">
-              Sign-in
-            </a>
-          ) : <UserButton afterSignOutUrl="/"/>}
-        </div>
+      
+        
       </nav>
       <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
         <div className="fixed inset-0 z-10" />
@@ -77,7 +70,7 @@ export default function Header() {
           </div>
           <div className="mt-6 flow-root">
             <div className="-my-6 divide-y divide-gray-500/10">
-              { sessionId && (
+             
                 <div className="space-y-2 py-6">
                   {navigation.map((item) => (
                     <a
@@ -89,17 +82,8 @@ export default function Header() {
                     </a>
                   ))}
                 </div>
-              )}
-              <div className="py-6">
-                { !sessionId ? (
-                  <a
-                    href="sign-in"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                  >
-                    Sign-in
-                  </a>
-                ) : <UserButton afterSignOutUrl="/"/>}
-              </div>
+       
+              
             </div>
           </div>
         </Dialog.Panel>

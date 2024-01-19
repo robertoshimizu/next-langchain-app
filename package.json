@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^4.29.2",
     "@headlessui/react": "^1.7.18",
     "@heroicons/react": "^2.1.1",
     "@langchain/community": "^0.0.16",
@@ -24,7 +23,6 @@
     "openai": "^4.24.3",
     "react": "18.2.0",
     "react-dom": "^18.2.0",
-    "stripe": "^14.11.0",
     "vercel": "^33.1.0",
     "zod": "^3.22.4"
   },
