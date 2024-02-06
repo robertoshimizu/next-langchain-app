@@ -35,7 +35,24 @@ function iterableReadableStreamToReadableStream(iterableReadableStream:IterableR
 }
 
 
-
+function createOutputOnlyStream(iterableStream:any) {
+  return new ReadableStream({
+    async start(controller) {
+      for await (const chunk of iterableStream) {
+        // Assuming `chunk` is an object and has an `output` property
+        if (chunk.output) {
+          // Convert the output to a Uint8Array (binary form) or keep as string
+          // Here, we're keeping it simple by assuming the output is a string
+          // and we're directly enqueueing it. In a real scenario, you might
+          // want to convert it to a binary format if needed.
+          controller.enqueue(chunk.output);
+        }
+      }
+      // Close the stream once all chunks have been processed
+      controller.close();
+    },
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -73,22 +90,19 @@ export async function POST(req: NextRequest) {
       tools,
     });
 
-    // const iterableStream = await agentExecutor.stream({
-    //   input: "what is LangChain?",
-    // });
-
-    // for await (const chunk of iterableStream) {
-    //   console.log(JSON.stringify(chunk, null, 2));
-    //   console.log("------");
-    // }
-
-    const logStream = await agentExecutor.streamLog({
-      input: "what is the weather in SF",
+    const iterableStream = await agentExecutor.stream({
+      input: currentMessageContent,
     });
 
-    for await (const chunk of logStream) {
-      console.log(JSON.stringify(chunk, null, 2));
-    }
+    const outputOnlyStream = createOutputOnlyStream(iterableStream);
+
+    // const logStream = await agentExecutor.streamLog({
+    //   input: "what is the weather in SF",
+    // });
+
+    // for await (const chunk of logStream) {
+    //   console.log(JSON.stringify(chunk, null, 2));
+    // }
 
     // for await (const chunk of logStream) {
     //   if (chunk.ops?.length > 0 && chunk.ops[0].op === "add") {
@@ -102,8 +116,8 @@ export async function POST(req: NextRequest) {
     //     }
     //   }
     // }
-    //return new StreamingTextResponse(stream);
-    return NextResponse.json({ value: 'sucess' }, { status: 200 });
+    return new StreamingTextResponse(outputOnlyStream);
+    //return NextResponse.json({ value: 'sucess' }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
