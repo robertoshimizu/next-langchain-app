@@ -18,6 +18,33 @@ const formatMessage = (message: VercelChatMessage) => {
   return `${message.role}: ${message.content}`;
 };
 
+
+function chunkify(content: string | any[], chunkSize: number) {
+  const chunks = [];
+  for (let i = 0; i < content.length; i += chunkSize) {
+    chunks.push(content.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+function createSimulatedOutputStream(iterableStream: any, chunkSize = 1024, delay = 100) {
+  return new ReadableStream({
+    async start(controller) {
+      for await (const chunk of iterableStream) {
+        // Assuming each `chunk` has an `output` property that is a string
+        if (chunk.output) {
+          const outputChunks = chunkify(chunk.output, chunkSize);
+          for (const outputChunk of outputChunks) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            controller.enqueue(outputChunk);
+          }
+        }
+      }
+      controller.close();
+    },
+  });
+}
+
 function iterableReadableStreamToReadableStream(iterableReadableStream:IterableReadableStream<any>) {
     return new ReadableStream<any>({
         async pull(controller) {
@@ -94,7 +121,8 @@ export async function POST(req: NextRequest) {
       input: currentMessageContent,
     });
 
-    const outputOnlyStream = createOutputOnlyStream(iterableStream);
+    //const outputOnlyStream = createOutputOnlyStream(iterableStream);
+    const outputOnlyStream = createSimulatedOutputStream(iterableStream, 1024, 500);
 
     // const logStream = await agentExecutor.streamLog({
     //   input: "what is the weather in SF",
